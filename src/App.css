@@ -735,7 +735,7 @@
 }
 
 @media(min-width:1440px) and (max-width:1500px) {
-
+   
   .containerGallery2 .slick-slider .slick-prev,
   .containerGallery .slick-slider .slick-prev {
     left: 26%;
@@ -1078,10 +1078,15 @@
   }
 }
 
-@media(min-width:1366px) {
+@media(min-width:1366px) and (max-width:1438px) {
   .containerGallery {
     height: 384px;
   }
+}
+@media(min-width:1439px) and (max-width:1500px) {
+  .containerGallery{
+    height: 350px;
+   }
 }
 
 @media(max-width:767px) {

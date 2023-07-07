@@ -7,8 +7,9 @@ import Slider from "react-slick";
 
 import "slick-carousel/slick/slick.css";
 
- /* const urlHost = window.location.host */
- const urlHost = 'https://magento-circular.bgroup.com.ar'
+  /* const urlHost = window.location.host */
+  const urlHost = ''
+ /* const urlHost = 'https://magento-circular.bgroup.com.ar' */
 
 function App() {
   const [loading,setLoading] = useState(false)
@@ -231,7 +232,7 @@ const refDiv = useRef(null);
         for (let i = 0; i < data.length; i++) {
           let p = data[i]?.custom_attributes.find((item) => item.attribute_code === "color");
            
-           if(p.value === item.option_id){
+           if(p?.value === item.option_id){
                
             dArrayc.push(data[i])
            }
@@ -263,7 +264,7 @@ const refDiv = useRef(null);
                 dArray.push(data[i])
            }
          }
-        let checkStock = dArray.find((item) => item?.extension_attributes?.stock_data?.quantity === 0 || item?.extension_attributes?.stock_data?.status === 0);
+        let checkStock = dArray.find((item) => item?.extension_attributes?.stock_data?.quantity === 0);
         let cAttributes = checkStock?.custom_attributes
         const vColor = cAttributes?.find((x) => x.attribute_code === "color");
         let dataListColorInf = dataColosInf
@@ -309,7 +310,7 @@ const refDiv = useRef(null);
     }
   }
   const requestMultiSkusColorAndSizes = async (data, position) => {
-   
+   console.log('objectxxxxx', data);
     try {
 
 
@@ -380,7 +381,7 @@ const refDiv = useRef(null);
           }
           return acc;
         }, []);
-        
+       
       if (position === "2") {
         if(dataColorFinal.length === 1){
           /* setea color por defecto si solo hay un solo color */
@@ -392,11 +393,11 @@ const refDiv = useRef(null);
         setDataColorSup(dataColorFinal);
       }
       if (position === "3") {
-        
-        if(dataColorFinal?.length === 1){
-          /* setea color por defecto si solo hay un solo color */
+        console.log('colo', dataColorFinal);
+       /*  if(dataColorFinal?.length === 1){
+          // setea color por defecto si solo hay un solo color 
           setColorIDInf(dataColorFinal[0].option_id);
-        }
+        } */
         /* 3 inferior */
         setDataSizesInf(dataSizesFinal);
         setDataColorInf(dataColorFinal);
@@ -420,11 +421,9 @@ const refDiv = useRef(null);
         (x) => x.attribute_code === "garment_type"
       );
 
-      let featureImage = response.data?.media_gallery_entries;
-      let imageFeature = featureImage?.find((x) => x.types == "slider_interface");
-      let dataImageFeature = [
-        {extension_attributes: {image: imageFeature?.file}, linked_product_sku: sku},
-      ];
+      let featureImage = response.data?.custom_attributes;
+      let imageFeature = featureImage?.find((x) => x.attribute_code === 'slider_interface');
+      let dataImageFeature = [{extension_attributes: {image: imageFeature?.value}, linked_product_sku: sku}];
       /*  const urlSlug = response.data?.custom_attributes?.find(x => x.attribute_code === 'url_key') */
 
       let productGallery = response.data.product_links;
@@ -578,14 +577,14 @@ const refDiv = useRef(null);
         setTitlePlugins('Combiná y encontrá tu look')
         setStepMobile('')
       }
-  /* let elementClass = document.querySelector('.modal-probador');
+  let elementClass = document.querySelector('.modal-probador');
   let sku = elementClass.getAttribute('data-sku') 
   let cartId = elementClass.getAttribute('data-quote');
   let total = elementClass.getAttribute('data-items') 
   
-   let sku = 'test-rita-pants'
+   /* let sku = 'test-rita-pants' */
 
-/*      let colorId = ''
+    let colorId = ''
     let attributeColor = document.querySelector('.swatch-option.color.selected');
     if(attributeColor){
       colorId = attributeColor.getAttribute('data-option-id')
@@ -594,23 +593,22 @@ const refDiv = useRef(null);
     let attributeSize = document.querySelector('.swatch-attribute.size .swatch-option.selected');
     if(attributeSize){
       sizeId = attributeSize.getAttribute('data-option-id') 
-    }   */
+    }  
     
     
-  let sku = 'test-serena-top'  /* Supeior */
+  /* let sku = 'producto-configurable' */  /* Supeior */
 
      /* let sku = "test-serena-top"; */  /* Inferior */
     /* let colorId = '223'
     let sizeId = '169' */
     /* let cartId = "";*/
-    let total = "";
+    /* let total = ""; */
  
-/*   if(colorId && sizeId){
+ if(colorId && sizeId){
   setSelectColorId(colorId)
   setSelectSizeId(sizeId)
- }  */ 
+ }   
     
-
     if(total){
       setCantItems(Number(total))
     }else{
@@ -692,10 +690,11 @@ const refDiv = useRef(null);
   };
 
   const colorAction = async (index, itemColor,type) => {
+    console.log('color Click' , itemColor);
     setSelectColorId()
     setColorSup(itemColor)
     validateTachado (type,itemColor,'color')
-    const dataArray = [...dataCheckoutSup.cartItem.product_option.extension_attributes.configurable_item_options]
+    let dataArray = [...dataCheckoutSup.cartItem.product_option.extension_attributes.configurable_item_options]
     dataArray.push({option_id:itemColor.attribute_id,option_value:Number(itemColor.option_id)})
 
     setDataChekoutSup((dataCheckoutSup) => {
@@ -713,7 +712,7 @@ const refDiv = useRef(null);
       const response = await axios.get(
         `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
       );
-
+      console.log('capturar iamgen ', response.data?.items)
       let colorDataImgs = response.data?.items;
       let dataCustomAttributes = [];
       let dataCustomAttributesFinal = [];
@@ -731,26 +730,15 @@ const refDiv = useRef(null);
         let dataAttributesU = colorDataImgs[u].custom_attributes;
 
         for (let o = 0; o < dataAttributesU.length; o++) {
-          if (
-            dataAttributesU[o].attribute_code === "color" &&
-            dataAttributesU[o].value === itemColor.option_id
-          ) {
+          if (dataAttributesU[o].attribute_code === "color" && dataAttributesU[o].value === itemColor.option_id) {
             dataCustomAttributesFinal.push(dataCustomAttributes[u]);
           }
         }
       }
-      let dImagen = dataCustomAttributesFinal[0]?.custom_attributes;
-      let item = dImagen?.find((item) => item.attribute_code === "garment_type");
+
+       let dImagen = dataCustomAttributesFinal[0]?.custom_attributes;
       
-      if (item?.value === "3") {
-        /* Prenda inferior */
-        /*  let imgI = dImagen.find(item => item.attribute_code === 'slider_interface'); */
-        /*  setImagenColorInferior({file:imgI.value}) */
-       
-      }
-      if (item?.value === "2") {
-        /* Prenda superior */
-        
+       if (type === "2") {
         let imgS = dImagen?.find((item) => item.attribute_code === "slider_interface");
          setImagenProductMobileSup(imgS.value)
         let dataImageFeatureColor = [
@@ -758,7 +746,7 @@ const refDiv = useRef(null);
         ];
         
         setSliderDataSup(dataImageFeatureColor.concat(sliderDataSup));
-      }
+      } 
       setFormSupAddCart((formSupAddCart) => ({
         ...formSupAddCart,
         color: itemColor.option_id,
@@ -867,8 +855,7 @@ const refDiv = useRef(null);
 
       if (dataCustomAttributesFinal[0]) {
         let dImagen = dataCustomAttributesFinal[0].custom_attributes;
-        let item = dImagen.find((item) => item.attribute_code === "garment_type");
-        if (item.value === "3") {
+        if (type === "3") {
            
           /* Prenda inferior */
           let imgI = dImagen.find((item) => item.attribute_code === "slider_interface");
@@ -1242,13 +1229,13 @@ const dragElement = useRef(null);
 const container = useRef(null);
 
 const containerOnMouseMove = (e) => {
-const isDesktop = window.matchMedia('(max-width: 1023px)');
+/* const isDesktop = window.matchMedia('(max-width: 1023px)'); 
 
-  if (!isDesktop.matches) {
+  if (!isDesktop.matches) {*/
     if (!isDragStarted || !e.pageY) {
       return
     };
-  }
+ /*  } */
 
   let leftValue = e.pageY - sizes.dragHeight / 2;
   
@@ -1514,7 +1501,6 @@ useEffect(() =>{
 useEffect(()=>{
   
 },[])
-
   return (
     <div className="App">
       {/* <button className="open-modal" id="modal1" onClick={gotoNext}>test</button> */}
@@ -1655,7 +1641,7 @@ useEffect(()=>{
                       <div className="sizes_and_colors">
                         
                         <ul className="colorBlock">
-                          {dataColorSup && dataColorSup.length &&
+                          {dataColorSup && dataColorSup.length !== 0 &&
                             dataColorSup.map((item, index) => (
                               <li key={index} className={`${item?.stock === 0 ? 'disabled': ''}`} style={{backgroundColor: `${item.color_value}`}}>
                                 <span onClick={item?.stock !== 0 ? () => colorAction(index, item,'2') : null} className={`${colorsStatus === index ? `active` : ''}`}>
@@ -1714,7 +1700,7 @@ useEffect(()=>{
                     <div className="talles">
                       <div className="sizes_and_colors">
                       <ul className="colorBlock">
-                          {dataColosInf && dataColosInf.length &&
+                          {dataColosInf && dataColosInf.length !== 0  &&
                             dataColosInf.map((item, index) => (
                               <li key={index} className={`${item?.stock === 0 ? 'disabled': ''}`} style={{backgroundColor: `${item.color_value}`}}>
                                 <span onClick={item?.stock !== 0 ? () => colorActionInf(index, item,'3') : null} className={`${colorsStatusInf === index ? `active` : ''}`}>
