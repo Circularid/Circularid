@@ -8,8 +8,11 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 
   /* const urlHost = window.location.host */
-  const urlHost = ''
- /* const urlHost = 'https://magento-circular.bgroup.com.ar' */
+  // const urlHost = ''
+ const urlHost = 'https://magento-circular.bgroup.com.ar' 
+const globalSkus = {}
+const globalSkusPrice = {}
+const globalSkusName = {}
 
 function App() {
   const [loading,setLoading] = useState(false)
@@ -199,7 +202,10 @@ const refDiv = useRef(null);
     }
     
     try {
-      const response = await axios.get(`${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`);
+      let response = await getCached(globalSkusPrice, dataIds, 
+        `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
+        );
+      
       const data = response.data.items
 
    if(position === '2'){
@@ -411,7 +417,7 @@ const refDiv = useRef(null);
   const initialFunction = async (sku) => {
 
     try {
-      const response = await axios.get(`${urlHost}/rest/V1/products/${sku}`);
+      let response = await getCached(globalSkus, sku, `${urlHost}/rest/V1/products/${sku}`)
       setTimeout(()=>{
        setLoading(false)
       },5000)
@@ -456,10 +462,23 @@ const refDiv = useRef(null);
       setLoading(false)
     }
   };
+
+  async function getCached(store, key, url) {
+    let response
+    if (key in store){
+      response = store[key]
+      console.log(`SKU CACHED ${key}`)
+    } else {
+      response = await axios.get(url);
+      store[key] = response
+    }
+    return response
+  }
   /* requestBySKUConfigurable */
   const requestBySKUConfigurable = async (sku, type) => {
     try {
-      const response = await axios.get(`${urlHost}/rest/V1/products/${sku}`);
+      let response = await getCached(globalSkus, sku, `${urlHost}/rest/V1/products/${sku}`)
+      
       let skusDataPrice = response.data?.extension_attributes?.configurable_product_links;
       const urlSlug = response.data?.custom_attributes?.find(
         (x) => x.attribute_code === "url_key"
@@ -503,8 +522,7 @@ const refDiv = useRef(null);
   const obtenerPrecio = async (skus2, type,idSizeId) => {
    
     try {
-      const response = await axios.get(`${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${skus2}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
-      );
+      let response = await getCached(globalSkusPrice, skus2, `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${skus2}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`);
       
       const data = response?.data?.items
       const pricesArray = []
@@ -578,11 +596,18 @@ const refDiv = useRef(null);
         setStepMobile('')
       }
   let elementClass = document.querySelector('.modal-probador');
-  let sku = elementClass.getAttribute('data-sku') 
-  let cartId = elementClass.getAttribute('data-quote');
-  let total = elementClass.getAttribute('data-items') 
+  let debug = true
+  let sku, cartId, total
+  if (debug) {
+      sku = 'test-serena-top' 
+      cartId = "";
+      total = ""; 
+  } else {
+      sku = elementClass.getAttribute('data-sku') 
+      cartId = elementClass.getAttribute('data-quote');
+      total = elementClass.getAttribute('data-items') 
+  }
   
-   /* let sku = 'test-rita-pants' */
 
     let colorId = ''
     let attributeColor = document.querySelector('.swatch-option.color.selected');
@@ -595,14 +620,12 @@ const refDiv = useRef(null);
       sizeId = attributeSize.getAttribute('data-option-id') 
     }  
     
-    
+ 
   /* let sku = 'producto-configurable' */  /* Supeior */
 
      /* let sku = "test-serena-top"; */  /* Inferior */
     /* let colorId = '223'
     let sizeId = '169' */
-    /* let cartId = "";*/
-    /* let total = ""; */
  
  if(colorId && sizeId){
   setSelectColorId(colorId)
@@ -709,9 +732,11 @@ const refDiv = useRef(null);
     dataIds = dataIds.toString();
 
     try {
-      const response = await axios.get(
+     
+      let response = await getCached(globalSkusPrice, dataIds, 
         `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
-      );
+        );
+      
       console.log('capturar iamgen ', response.data?.items)
       let colorDataImgs = response.data?.items;
       let dataCustomAttributes = [];
@@ -823,9 +848,10 @@ const refDiv = useRef(null);
     dataIds = dataIds.toString();
 
     try {
-      const response = await axios.get(
+      let response = await getCached(globalSkusPrice, dataIds, 
         `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
-      );
+        );
+      
       /* console.log('color api Inf', response.data?.items); */
       let colorDataImgs = response.data?.items;
       let dataCustomAttributes = [];
