@@ -12,7 +12,6 @@ import "slick-carousel/slick/slick.css";
  const urlHost = 'https://magento-circular.bgroup.com.ar' 
 const globalSkus = {}
 const globalSkusPrice = {}
-const globalSkusName = {}
 
 function App() {
   const [loading,setLoading] = useState(false)
@@ -426,13 +425,21 @@ const refDiv = useRef(null);
       const imagePosition = response.data?.custom_attributes?.find(
         (x) => x.attribute_code === "garment_type"
       );
-
       let featureImage = response.data?.custom_attributes;
       let imageFeature = featureImage?.find((x) => x.attribute_code === 'slider_interface');
       let dataImageFeature = [{extension_attributes: {image: imageFeature?.value}, linked_product_sku: sku}];
       /*  const urlSlug = response.data?.custom_attributes?.find(x => x.attribute_code === 'url_key') */
 
       let productGallery = response.data.product_links;
+      Promise.all(productGallery.map(async product => {
+        let res = await getCached(globalSkus, product.linked_product_sku,
+          `${urlHost}/rest/V1/products/${product.linked_product_sku}`)
+        if (res.data.extension_attributes.configurable_product_links) {
+          let ids = res.data.extension_attributes.configurable_product_links
+          await getCached(globalSkusPrice, ids, `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${ids}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`);
+        }
+      }
+      ));
       let resultSup = productGallery?.filter(
         (item) => item.link_type === "upperlink"
       ); /* Superiores */
@@ -596,7 +603,7 @@ const refDiv = useRef(null);
         setStepMobile('')
       }
   let elementClass = document.querySelector('.modal-probador');
-  let debug = true
+  let debug = false
   let sku, cartId, total
   if (debug) {
       sku = 'test-serena-top' 
