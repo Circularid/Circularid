@@ -7,9 +7,12 @@ import Slider from "react-slick";
 
 import "slick-carousel/slick/slick.css";
 
-  /* const urlHost = window.location.host */
+  let urlHost = window.location.host 
   // const urlHost = ''
- const urlHost = 'https://magento-circular.bgroup.com.ar' 
+  const debug = false
+  if (debug) {
+    urlHost = 'https://magento-circular.bgroup.com.ar' 
+  }
 const globalSkus = {}
 const globalSkusPrice = {}
 
@@ -130,6 +133,10 @@ const refDiv = useRef(null);
   const [openModal, setOpenModal] = useState(false);
 
   /* slider init */
+  const [originalSliderDataSup, setOriginalSliderDataSup] = useState([]);
+  const [currentProduct, setCurrentProduct] = useState()
+  const [currentProductInf, setCurrentProductInf] = useState()
+  const [originalSliderDataInf, setOriginalSliderDataInf] = useState([]);
   const [sliderDataSup, setSliderDataSup] = useState([]);
   const [sliderDataInf, setSliderDataInf] = useState([]);
   /* slider end */
@@ -451,7 +458,6 @@ const refDiv = useRef(null);
 
       setSliderDataSup(resultSup);
 
-
       setSliderDataInf(resultInf);
       /* lista de imagenes para la  galeria fin*/
 
@@ -459,6 +465,7 @@ const refDiv = useRef(null);
         setPositionInitial('2')
 
         setSliderDataSup([].concat(dataImageFeature, resultSup));
+        console.log(dataImageFeature, resultSup)
       } else if (imagePosition.value === "3") {
         setPositionInitial('3')
 
@@ -603,7 +610,6 @@ const refDiv = useRef(null);
         setStepMobile('')
       }
   let elementClass = document.querySelector('.modal-probador');
-  let debug = false
   let sku, cartId, total
   if (debug) {
       console.log("DEBUG MODE ON")
@@ -616,6 +622,7 @@ const refDiv = useRef(null);
       total = elementClass.getAttribute('data-items') 
   }
   
+   /* let sku = 'test-rita-pants' */
 
     let colorId = ''
     let attributeColor = document.querySelector('.swatch-option.color.selected');
@@ -631,9 +638,11 @@ const refDiv = useRef(null);
  
   /* let sku = 'producto-configurable' */  /* Supeior */
 
-     /* let sku = "test-serena-top"; */  /* Inferior */
-    /* let colorId = '223'
-    let sizeId = '169' */
+    /*  let sku = "49292993"; */  /* Inferior */
+    //let colorId = '223'
+    //let sizeId = '169'
+    /* let cartId = "";
+    let total = "98" */;
  
  if(colorId && sizeId){
   setSelectColorId(colorId)
@@ -729,6 +738,7 @@ const refDiv = useRef(null);
     dataArray.push({option_id:itemColor.attribute_id,option_value:Number(itemColor.option_id)})
 
     setDataChekoutSup((dataCheckoutSup) => {
+      console.log(dataCheckoutSup)
       const date = {...dataCheckoutSup};
       
       date.cartItem.product_option.extension_attributes.configurable_item_options = dataArray
@@ -778,7 +788,22 @@ const refDiv = useRef(null);
           {extension_attributes: {image: imgS.value}, linked_product_sku: 0},
         ];
         
-        setSliderDataSup(dataImageFeatureColor.concat(sliderDataSup));
+
+        let slider = sliderDataSup
+        
+        slider.map(function(dato){
+        if(dato.position == currentProduct.position){
+          console.log("este: ", dato.position)
+          dato.extension_attributes.image = dataImageFeatureColor[0].extension_attributes.image
+        }
+        return dato;
+        });
+
+        console.log(slider)
+
+        console.log('slider-original: ', sliderDataSup, dataImageFeatureColor)
+        setOriginalSliderDataSup(slider)   
+        console.log('slider-nuevo: ', sliderDataSup, slider.indexOf("Camisa Rip Curl Stripess"))     
       } 
       setFormSupAddCart((formSupAddCart) => ({
         ...formSupAddCart,
@@ -897,7 +922,23 @@ const refDiv = useRef(null);
           let dataImageFeatureColor = [
             {extension_attributes: {image: imgI.value}, linked_product_sku: 0},
           ];
-          setSliderDataInf(dataImageFeatureColor.concat(sliderDataInf));
+
+
+          let sliderInf = sliderDataInf
+        
+        sliderInf.map(function(dato){
+        if(dato.position == currentProductInf.position){
+          console.log("este: ", dato.position)
+          dato.extension_attributes.image = dataImageFeatureColor[0].extension_attributes.image
+        }
+        return dato;
+        });
+       
+        console.log(sliderInf)
+
+        console.log('slider-original-inf: ', sliderDataInf, dataImageFeatureColor)
+        setOriginalSliderDataInf(sliderInf)   
+        console.log('slider-nuevo-inf: ', sliderDataInf)  
         }
        
       }
@@ -910,7 +951,8 @@ const refDiv = useRef(null);
     }
   };
   const beforeChangeEvent = (currentSlide) => {
-    console.log('change event slider superior');
+    setCurrentProduct(sliderDataSup[currentSlide])
+    console.log('change event slider superior', sliderDataSup[currentSlide]);
     let skuIndexCurrent = sliderDataSup[currentSlide];
     let skuPrimary = skuIndexCurrent?.linked_product_sku;
     if (skuPrimary) {
@@ -943,6 +985,7 @@ const refDiv = useRef(null);
   };
  
   const beforeChangeEventInf = (currentSlide) => {
+    setCurrentProductInf(sliderDataInf[currentSlide])
     let skuIndexCurrent = sliderDataInf[currentSlide];
     let skuPrimary = skuIndexCurrent?.linked_product_sku;
     if (skuPrimary) {
@@ -1615,8 +1658,9 @@ useEffect(()=>{
                   afterChange={beforeChangeEvent}
                 >
 
-                  {sliderDataSup &&
-                    sliderDataSup?.map((item, index) => (
+                  {(sliderDataSup.length >= originalSliderDataSup.length) &&
+                    sliderDataSup?.map((item, index) => {
+                      return(
                       <div key={index} className={`listItem`} >
                         <span className="promocion"></span>
                         <img id="imageFeatureGallerySup" 
@@ -1624,7 +1668,21 @@ useEffect(()=>{
                           alt="imagen"
                         />
                       </div>
-                    ))}
+                      )
+                  })}    
+                  {(sliderDataSup.length < originalSliderDataSup.length) &&
+                    originalSliderDataSup?.map((item, index) => {
+                      console.log('slider-new: ', JSON.stringify(sliderDataSup)) 
+                      return(
+                      <div key={index} className={`listItem`} >
+                        <span className="promocion"></span>
+                        <img id="imageFeatureGallerySup" 
+                          src={`${urlHost}/media/catalog/product${item?.extension_attributes?.image}`}
+                          alt="imagen"
+                        />
+                      </div>
+                      )
+                  })}                 
                 </Slider>
               </div>
 
@@ -1636,8 +1694,18 @@ useEffect(()=>{
                   afterChange={beforeChangeEventInf}
                  
                 >
-                  {sliderDataInf &&
+                  {(sliderDataInf.length >= originalSliderDataInf.length) &&
                     sliderDataInf.map((item, index) => (
+                      <div key={index} className={`listItem`}>
+                        <span className="promocion"></span>
+                        <img id="imageFeatureGalleryInf" 
+                          src={`${urlHost}/media/catalog/product${item?.extension_attributes?.image}`}
+                          alt="imagen"
+                        />
+                      </div>
+                    ))}
+                    {(sliderDataInf.length < originalSliderDataInf.length) &&
+                    originalSliderDataInf.map((item, index) => (
                       <div key={index} className={`listItem`}>
                         <span className="promocion"></span>
                         <img id="imageFeatureGalleryInf" 
@@ -1880,5 +1948,4 @@ const BotonSubirBajar = styled.button`
   background-image: url(${`${urlHost}/media/imageeditor/iconos/icon-arrow-gallery.svg`});
 } 
 `
-
 
