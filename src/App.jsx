@@ -606,6 +606,7 @@ const refDiv = useRef(null);
   let debug = false
   let sku, cartId, total
   if (debug) {
+      console.log("DEBUG MODE ON")
       sku = 'test-serena-top' 
       cartId = "";
       total = ""; 

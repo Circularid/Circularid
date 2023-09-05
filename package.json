@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "copyDist": "cp dist/assets/index-*.js build/js/main.js && cp dist/assets/index-*.css build/css/main.css",
-    "build": "vite build && yarn copyDist", 
+    "build": "vite build", 
+    "deploy": "yarn copyDist && rsync -e 'tsh ssh' -azvP build/ ubuntu@magento-circular:/home/ubuntu/infrastructure/src/app/code/React/Js/view/frontend/web/",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
