@@ -7,13 +7,15 @@ import Slider from "react-slick";
 
 import "slick-carousel/slick/slick.css";
 
-let urlHost = window.location.host
+let urlHost = window.location.origin
 // const urlHost = ''
 const debug = false
-console.log("DEBUG DISABLE")
 if (debug) {
   console.log("DEBUG ENABLE")
   urlHost = 'https://magento-circular.bgroup.com.ar'
+}
+else {
+  console.log("DEBUG DISABLE")
 }
 const globalSkus = {}
 const globalSkusPrice = {}
