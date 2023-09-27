@@ -9,7 +9,7 @@ import "slick-carousel/slick/slick.css";
 
 let urlHost = window.location.origin
 // const urlHost = ''
-const debug = true
+const debug = false
 if (debug) {
   console.log("DEBUG ENABLE")
   urlHost = 'https://magento-circular.bgroup.com.ar'
