@@ -399,10 +399,10 @@ function App() {
       }, []);
 
       if (position === "2") {
-        if (dataColorFinal.length === 1) {
-          /* setea color por defecto si solo hay un solo color */
-          setColorIDSup(dataColorFinal[0].option_id);
-        }
+        // if (dataColorFinal.length === 1) {
+        //   /* setea color por defecto si solo hay un solo color */
+        //   setColorIDSup(dataColorFinal[0].option_id);
+        // }
         /* 2 superior */
 
         setDataSizesSup(dataSizesFinal);
@@ -1023,13 +1023,13 @@ function App() {
   const addToCart = async (type) => {
     if (type === "2") {
 
-      if (!colorIDSup) {
+      if (!colorIDSup && dataColorSup) {
         setMessageErrorColor("* Tenes que seleccionar un color");
         return;
       } else {
         setMessageErrorColor();
       }
-      if (!sizeIDSup) {
+      if (!sizeIDSup && dataSizesSup) {
         setMessageErrorTalle("* Tenes que seleccionar un talle");
         return;
       } else {
@@ -1042,13 +1042,13 @@ function App() {
     }
     if (type === "3") {
 
-      if (!colorIDInf) {
+      if (!colorIDInf && dataColosInf) {
         setMessageErrorColorInf("* Tenes que seleccionar un color");
         return;
       } else {
         setMessageErrorColorInf();
       }
-      if (!sizeIDInf) {
+      if (!sizeIDInf && dataSizesInf) {
         setMessageErrorTalleInf("* Tenes que seleccionar un talle");
         return;
       } else {
@@ -1542,8 +1542,9 @@ function App() {
     secInf.style.display = "flex";
   }
   const seguirComprando = () => {
-    window.location.reload(true);
+    // window.location.reload(true);
     setAddCheckout(false)
+    // addCheckout = false
   }
   const deleteItemBlock = (type) => {
     if (type === '2') {
@@ -1572,9 +1573,10 @@ function App() {
         if (imgsrcSup && imgsrcInf) {
           let pluginsImageSup = document.querySelector(".checkoutAddMessage .prodItems #imgSupDesk");
           let pluginsImageInf = document.querySelector(".checkoutAddMessage .prodItems #imgInfDesk");
-
-          pluginsImageInf.setAttribute('src', imgsrcInf);
-          pluginsImageSup.setAttribute('src', imgsrcSup);
+          if (pluginsImageSup && pluginsImageInf) {
+            pluginsImageInf.setAttribute('src', imgsrcInf);
+            pluginsImageSup.setAttribute('src', imgsrcSup);
+          }
         }
       }
     }
