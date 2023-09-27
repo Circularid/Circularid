@@ -9,7 +9,7 @@ import "slick-carousel/slick/slick.css";
 
 let urlHost = window.location.origin
 // const urlHost = ''
-const debug = false
+const debug = true
 if (debug) {
   console.log("DEBUG ENABLE")
   urlHost = 'https://magento-circular.bgroup.com.ar'
@@ -617,7 +617,7 @@ function App() {
     let sku, cartId, total
     if (debug) {
       console.log("DEBUG MODE ON")
-      sku = 'test-serena-top'
+      sku = '0012'
       cartId = "";
       total = "";
     } else {
@@ -1023,7 +1023,7 @@ function App() {
   const addToCart = async (type) => {
     if (type === "2") {
 
-      if (!colorIDSup && dataColorSup.length > 1) {
+      if (!colorIDSup) {
         setMessageErrorColor("* Tenes que seleccionar un color");
         return;
       } else {
@@ -1042,7 +1042,7 @@ function App() {
     }
     if (type === "3") {
 
-      if (!colorIDInf && dataColosInf.length > 1) {
+      if (!colorIDInf) {
         setMessageErrorColorInf("* Tenes que seleccionar un color");
         return;
       } else {
@@ -1159,7 +1159,7 @@ function App() {
   const addCartAll = async () => {
     console.log('click btn all add');
 
-    if (!colorIDSup && dataColorSup.length > 1) {
+    if (!colorIDSup) {
       setMessageErrorColor("* Tenes que seleccionar un color");
       return;
     } else {
@@ -1177,7 +1177,7 @@ function App() {
     } else {
       setMessageErrorTalleInf();
     }
-    if (!colorIDInf && dataColosInf.length > 1) {
+    if (!colorIDInf) {
       setMessageErrorColorInf("* Tenes que seleccionar un color");
       return;
     } else {
