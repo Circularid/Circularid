@@ -410,10 +410,10 @@ function App() {
       }
       if (position === "3") {
         console.log('colo', dataColorFinal);
-        /*  if(dataColorFinal?.length === 1){
-           // setea color por defecto si solo hay un solo color 
-           setColorIDInf(dataColorFinal[0].option_id);
-         } */
+        //  if(dataColorFinal?.length === 1){
+        //    // setea color por defecto si solo hay un solo color 
+        //    setColorIDInf(dataColorFinal[0].option_id);
+        //  }
         /* 3 inferior */
         setDataSizesInf(dataSizesFinal);
         setDataColorInf(dataColorFinal);
@@ -617,7 +617,7 @@ function App() {
     let sku, cartId, total
     if (debug) {
       console.log("DEBUG MODE ON")
-      sku = '0012'
+      sku = '0002'
       cartId = "";
       total = "";
     } else {
@@ -1023,13 +1023,13 @@ function App() {
   const addToCart = async (type) => {
     if (type === "2") {
 
-      if (!colorIDSup && dataColorSup) {
+      if (!colorIDSup && dataColorSup && dataColorSup.length >= 1) {
         setMessageErrorColor("* Tenes que seleccionar un color");
         return;
       } else {
         setMessageErrorColor();
       }
-      if (!sizeIDSup && dataSizesSup) {
+      if (!sizeIDSup  && dataSizesSup && dataSizesSup.length >= 1) {
         setMessageErrorTalle("* Tenes que seleccionar un talle");
         return;
       } else {
@@ -1042,13 +1042,13 @@ function App() {
     }
     if (type === "3") {
 
-      if (!colorIDInf && dataColosInf) {
+      if (!colorIDInf && dataColosInf && dataColosInf.length >= 1) {
         setMessageErrorColorInf("* Tenes que seleccionar un color");
         return;
       } else {
         setMessageErrorColorInf();
       }
-      if (!sizeIDInf && dataSizesInf) {
+      if (!sizeIDInf && dataSizesInf && dataSizesInf.length >= 1) {
         setMessageErrorTalleInf("* Tenes que seleccionar un talle");
         return;
       } else {
