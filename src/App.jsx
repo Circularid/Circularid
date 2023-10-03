@@ -1159,25 +1159,25 @@ function App() {
   const addCartAll = async () => {
     console.log('click btn all add');
 
-    if (!colorIDSup) {
+    if (!colorIDSup && dataColorSup && dataColorSup.length >= 1) {
       setMessageErrorColor("* Tenes que seleccionar un color");
       return;
     } else {
       setMessageErrorColor();
     }
-    if (!sizeIDSup) {
+    if (!sizeIDSup  && dataSizesSup && dataSizesSup.length >= 1) {
       setMessageErrorTalle("* Tenes que seleccionar un talle");
       return;
     } else {
       setMessageErrorTalle();
     }
-    if (!sizeIDInf) {
+    if (!sizeIDInf && dataSizesInf && dataSizesInf.length >= 1) {
       setMessageErrorTalleInf("* Tenes que seleccionar un talle");
       return;
     } else {
       setMessageErrorTalleInf();
     }
-    if (!colorIDInf) {
+    if (!colorIDInf && dataColosInf && dataColosInf.length >= 1) {
       setMessageErrorColorInf("* Tenes que seleccionar un color");
       return;
     } else {
@@ -1850,9 +1850,8 @@ function App() {
               </div>
               <div className="section_add_cart_mobile">
                 <div style={{ paddingTop: '10px' }}>
-
-                  <span className="errorMess">{messageErrorTalle}  <br /> {messageErrorTalleIInf}</span>
-                  <span className="errorMess">{messageErrorColor}  <br /> {messageErrorColorInf}</span>
+                  <span className="errorMess error_talle">{messageErrorTalle ? 'Superior: ' + messageErrorTalle : ''}  <br /> {messageErrorTalleIInf ? 'Inferior: ' + messageErrorTalleIInf : ''}</span>
+                  <span className="errorMess error_color">{messageErrorColor}  <br /> {messageErrorColorInf}</span>
                 </div>
 
               </div>

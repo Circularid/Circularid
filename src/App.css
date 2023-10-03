@@ -423,7 +423,7 @@
   display: block;
   text-align: center;
   padding-bottom: 30px;
-  padding-top: 36px;
+  /* padding-top: 36px; */
 }
 
 .messageAddCart h2 {
