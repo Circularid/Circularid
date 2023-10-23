@@ -442,7 +442,7 @@ function App() {
       /*  const urlSlug = response.data?.custom_attributes?.find(x => x.attribute_code === 'url_key') */
 
       let productGallery = response.data.product_links;
-      Promise.all(productGallery.map(async product => {
+      let res = await Promise.all(productGallery.map(async product => {
         let res = await getCached(globalSkus, product.linked_product_sku,
           `${urlHost}/rest/V1/products/${product.linked_product_sku}`)
         if (res.data.extension_attributes.configurable_product_links) {
