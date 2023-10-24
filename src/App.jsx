@@ -19,7 +19,12 @@ else {
 }
 const globalSkus = {}
 const globalSkusPrice = {}
-
+const globalSkuStore = {}
+const globalProductStore = {}
+const stores = {
+  'sku': globalSkuStore,
+  'entity_id': globalProductStore,
+}
 function App() {
   const [loading, setLoading] = useState(false)
   const [initState, setInitState] = useState({ slideIndex: 1, updateCount: 1 });
@@ -212,11 +217,14 @@ function App() {
     }
 
     try {
-      let response = await getCached(globalSkusPrice, dataIds,
-        `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
-      );
+      // let response = await getCached(globalSkusPrice, dataIds,
+      //   `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
+      // );
 
-      const data = response.data.items
+      let response = await getCachedKey(dataIds, 'entity_id');
+
+
+      const data = response
 
       if (position === '2') {
 
@@ -427,30 +435,41 @@ function App() {
   const initialFunction = async (sku) => {
 
     try {
-      let response = await getCached(globalSkus, sku, `${urlHost}/rest/V1/products/${sku}`)
-      setTimeout(() => {
-        setLoading(false)
-      }, 5000)
-      console.log("data api ", response.data);
+      // let response = await getCached(globalSkus, sku, `${urlHost}/rest/V1/products/${sku}`)
+      let response = (await getCachedKey([sku]))[0]
 
-      const imagePosition = response.data?.custom_attributes?.find(
+      // setTimeout(() => {
+      // }, 5000)
+      // console.log("data api ", response.data);
+
+      const imagePosition = response?.custom_attributes?.find(
         (x) => x.attribute_code === "garment_type"
       );
-      let featureImage = response.data?.custom_attributes;
+      let featureImage = response?.custom_attributes;
       let imageFeature = featureImage?.find((x) => x.attribute_code === 'slider_interface');
       let dataImageFeature = [{ extension_attributes: { image: imageFeature?.value }, linked_product_sku: sku }];
-      /*  const urlSlug = response.data?.custom_attributes?.find(x => x.attribute_code === 'url_key') */
+      /*  const urlSlug = response?.custom_attributes?.find(x => x.attribute_code === 'url_key') */
 
-      let productGallery = response.data.product_links;
-      let res = await Promise.all(productGallery.map(async product => {
-        let res = await getCached(globalSkus, product.linked_product_sku,
-          `${urlHost}/rest/V1/products/${product.linked_product_sku}`)
-        if (res.data.extension_attributes.configurable_product_links) {
-          let ids = res.data.extension_attributes.configurable_product_links
-          await getCached(globalSkusPrice, ids, `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${ids}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`);
-        }
-      }
-      ));
+      let productGallery = response?.product_links;
+      let idsSimple = productGallery.map(product => product.linked_product_sku)
+      let res = await getCachedKey(idsSimple)
+
+      // let res = await Promise.all(productGallery.map(async product => {
+      //   let res = await getCached(globalSkus, product.linked_product_sku,
+      //     `${urlHost}/rest/V1/products/${product.linked_product_sku}`)
+      //   return res
+      // }))
+      let idsFirst = response.extension_attributes.configurable_product_links ?? [] 
+      let ids = res.map(item => item.extension_attributes.configurable_product_links ?? [])
+      ids.push(idsFirst)
+      let base = [].concat.apply([], ids)
+      base = Array.from(new Set(base))
+      await getCachedKey(base, 'entity_id')
+
+      // {
+      //   let ids = res.data.extension_attributes.configurable_product_links
+      // }
+      // ));
       let resultSup = productGallery?.filter(
         (item) => item.link_type === "upperlink"
       ); /* Superiores */
@@ -475,6 +494,8 @@ function App() {
 
         setSliderDataInf([].concat(dataImageFeature, resultInf));
       }
+      setLoading(false)
+
     } catch (e) {
       console.log(e);
       setLoading(false)
@@ -492,24 +513,48 @@ function App() {
     }
     return response
   }
+
+  function buildUrl(keys, filter) {
+    return `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=${filter}&searchCriteria[filter_groups][0][filters][0][value]=${keys}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
+  }
+
+  async function getCachedKey(keys, filter = 'sku') {
+    let store = stores[filter]
+    let keysToSearch = keys.filter(key => !(key in store))
+    if (keysToSearch.length > 0){
+
+      let response = await axios.get(buildUrl(keysToSearch, filter));
+      response.data.items.forEach(item => {
+        if (filter == 'entity_id') {
+          store[item.id] = item
+        }else {
+          store[item.sku] = item
+        }
+      })
+    }
+    return keys.map(key => store[key])
+  }
+
+
+
   /* requestBySKUConfigurable */
   const requestBySKUConfigurable = async (sku, type) => {
     try {
-      let response = await getCached(globalSkus, sku, `${urlHost}/rest/V1/products/${sku}`)
+      let response = (await getCachedKey([sku], 'sku'))[0]
 
-      let skusDataPrice = response.data?.extension_attributes?.configurable_product_links;
-      const urlSlug = response.data?.custom_attributes?.find(
+      let skusDataPrice = response?.extension_attributes?.configurable_product_links;
+      const urlSlug = response?.custom_attributes?.find(
         (x) => x.attribute_code === "url_key"
       );
       if (type === "2") {
-        setDataStateAllBySkuCurrentSup(response.data);
+        setDataStateAllBySkuCurrentSup(response);
         setInfoDataSuperior({
           ...infoDataSuperior,
           slug: urlSlug?.value,
-          name: response?.data.name,
+          name: response?.name,
         });
-        requestMultiSkusColorAndSizes(response.data, "2");
-        obtenerPrecio(skusDataPrice.toString(), "2", null);
+        requestMultiSkusColorAndSizes(response, "2");
+        obtenerPrecio(skusDataPrice, "2", null);
         setDataChekoutSup((dataCheckoutSup) => {
           const date = { ...dataCheckoutSup };
           date.cartItem.sku = sku;
@@ -517,14 +562,14 @@ function App() {
         });
       }
       if (type === "3") {
-        setDataStateAllBySkuCurrentInf(response.data);
+        setDataStateAllBySkuCurrentInf(response);
         setInfoDataInferior({
           ...infoDataInferior,
           slug: urlSlug?.value,
-          name: response?.data.name,
+          name: response?.name,
         });
-        requestMultiSkusColorAndSizes(response.data, "3");
-        obtenerPrecio(skusDataPrice.toString(), "3", null);
+        requestMultiSkusColorAndSizes(response, "3");
+        obtenerPrecio(skusDataPrice, "3", null);
         setDataChekoutInf((dataCheckoutInf) => {
           const date = { ...dataCheckoutInf };
           date.cartItem.sku = sku;
@@ -540,9 +585,9 @@ function App() {
   const obtenerPrecio = async (skus2, type, idSizeId) => {
 
     try {
-      let response = await getCached(globalSkusPrice, skus2, `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${skus2}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`);
+      let response = await getCachedKey(skus2, 'entity_id');
 
-      const data = response?.data?.items
+      const data = response
       const pricesArray = []
       let priceFinal = 0
       let price = 0
@@ -706,7 +751,7 @@ function App() {
     setSizeIDSup(itemSize.option_id);
     setSizesStatus(index);
     let dataIds = dataStateAllBySkuCurrentSup?.extension_attributes?.configurable_product_links;
-    dataIds = dataIds.toString();
+    dataIds = dataIds;
     obtenerPrecio(dataIds, type, itemSize.option_id)
     setFormSupAddCart((formSupAddCart) => ({
       ...formSupAddCart,
@@ -723,7 +768,7 @@ function App() {
     setSizeIDInf(itemSize.option_id);
     setSizesStatusInf(index);
     let dataIds = dataStateAllBySkuCurrentInf?.extension_attributes?.configurable_product_links;
-    dataIds = dataIds.toString();
+    dataIds = dataIds;
     obtenerPrecio(dataIds, type, itemSize.option_id)
 
     setFormInfAddCart((formInfAddCart) => ({
@@ -751,37 +796,34 @@ function App() {
     setColorIDSup(itemColor.option_id);
     setColorsStatus(index);
     let dataIds = dataStateAllBySkuCurrentSup?.extension_attributes?.configurable_product_links;
-    dataIds = dataIds.toString();
+    dataIds = dataIds;
 
     try {
 
-      let response = await getCached(globalSkusPrice, dataIds,
-        `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
-      );
+      // let response = await getCached(globalSkusPrice, dataIds,
+      //   `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
+      // );
+      let response = await getCachedKey(dataIds, 'entity_id');
 
-      console.log('capturar iamgen ', response.data?.items)
-      let colorDataImgs = response.data?.items;
+
+      console.log('capturar iamgen ', response)
+      let colorDataImgs = response;
       let dataCustomAttributes = [];
       let dataCustomAttributesFinal = [];
-      for (let i = 0; i < colorDataImgs.length; i++) {
-        let dataAttributes = colorDataImgs[i]?.custom_attributes;
-
-        for (let c = 0; c < dataAttributes.length; c++) {
-          if (dataAttributes[c].attribute_code === "slider_interface") {
-            dataCustomAttributes.push(colorDataImgs[i]);
+      colorDataImgs.map(cimg => {
+        cimg.custom_attributes.map(da => {
+          if (da.attribute_code === "slider_interface") {
+            dataCustomAttributes.push(cimg);
           }
-        }
-      }
-
-      for (let u = 0; u < dataCustomAttributes.length; u++) {
-        let dataAttributesU = colorDataImgs[u].custom_attributes;
-
-        for (let o = 0; o < dataAttributesU.length; o++) {
-          if (dataAttributesU[o].attribute_code === "color" && dataAttributesU[o].value === itemColor.option_id) {
-            dataCustomAttributesFinal.push(dataCustomAttributes[u]);
+        })
+      })
+      dataCustomAttributes.map(dca => {
+        dca.custom_attributes.map(dcaca => {
+          if (dcaca.attribute_code === "color" && dcaca.value === itemColor.option_id) {
+            dataCustomAttributesFinal.push(dca);
           }
-        }
-      }
+        })
+      })
 
       let dImagen = dataCustomAttributesFinal[0]?.custom_attributes;
 
@@ -827,7 +869,7 @@ function App() {
           `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
         );
        
-          console.log('combinacion prices xxxx', response.data);
+          console.log('combinacion prices xxxx', response);
         let data = response?.data?.items;
         let dataPrice = [];
         for (let i = 0; i < data.length; i++) {
@@ -882,15 +924,17 @@ function App() {
     setColorIDInf(itemColor.option_id);
     setColorsStatusInf(index);
     let dataIds = dataStateAllBySkuCurrentInf?.extension_attributes?.configurable_product_links;
-    dataIds = dataIds.toString();
+    dataIds = dataIds;
 
     try {
-      let response = await getCached(globalSkusPrice, dataIds,
-        `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
-      );
+      // let response = await getCached(globalSkusPrice, dataIds,
+      //   `${urlHost}/rest/V1/products?searchCriteria[filter_groups][0][filters][0][field]=entity_id&searchCriteria[filter_groups][0][filters][0][value]=${dataIds}&searchCriteria[filter_groups][0][filters][0][condition_type]=in`
+      // );
 
-      /* console.log('color api Inf', response.data?.items); */
-      let colorDataImgs = response.data?.items;
+      let response = await getCachedKey(dataIds, 'entity_id');
+
+      /* console.log('color api Inf', response); */
+      let colorDataImgs = response;
       let dataCustomAttributes = [];
       let dataCustomAttributesFinal = [];
       for (let i = 0; i < colorDataImgs.length; i++) {
@@ -954,14 +998,14 @@ function App() {
       console.log(error);
     }
   };
-  const beforeChangeEvent = (currentSlide) => {
+  const beforeChangeEvent = async (currentSlide) => {
     setCurrentProduct(sliderDataSup[currentSlide])
     console.log('change event slider superior', sliderDataSup[currentSlide]);
     let skuIndexCurrent = sliderDataSup[currentSlide];
     let skuPrimary = skuIndexCurrent?.linked_product_sku;
     if (skuPrimary) {
       /* console.log('event next sup', currentSlide,skuPrimary); */
-      requestBySKUConfigurable(skuPrimary, "2");
+      await requestBySKUConfigurable(skuPrimary, "2");
       /*  requestMultiSkusColorAndSizes(skuPrimary,'2',null) */
       setSizeIDSup(); /* reset size sup al cambiar de prod nuevo */
       setColorIDSup(); /* reset color sup al cambiar de prod nuevo */
@@ -1029,7 +1073,7 @@ function App() {
       } else {
         setMessageErrorColor();
       }
-      if (!sizeIDSup  && dataSizesSup && dataSizesSup.length >= 1) {
+      if (!sizeIDSup && dataSizesSup && dataSizesSup.length >= 1) {
         setMessageErrorTalle("* Tenes que seleccionar un talle");
         return;
       } else {
@@ -1165,7 +1209,7 @@ function App() {
     } else {
       setMessageErrorColor();
     }
-    if (!sizeIDSup  && dataSizesSup && dataSizesSup.length >= 1) {
+    if (!sizeIDSup && dataSizesSup && dataSizesSup.length >= 1) {
       setMessageErrorTalle("* Tenes que seleccionar un talle");
       return;
     } else {
